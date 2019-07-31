@@ -1,20 +1,22 @@
 import cv2
+import time
 import sys
+import threading
 from mail import sendEmail
 from flask import Flask, render_template, Response
 from camera import VideoCamera
 from flask_basicauth import BasicAuth
-import time
-import threading
 
-email_update_interval = 600 # sends an email only once in this time interval
+draw_frame = False
+rgb = (50, 255, 50)
+email_update_interval = 30 # sends an email only once in this time interval
 video_camera = VideoCamera(flip=True) # creates a camera object, flip vertically
-object_classifier = cv2.CascadeClassifier("models/fullbody_recognition_model.xml") # an opencv classifier
+object_classifier = cv2.CascadeClassifier("models/cat_face_extended.xml") # an opencv classifier
 
 # App Globals (do not edit)
 app = Flask(__name__)
-app.config['BASIC_AUTH_USERNAME'] = 'CHANGE_ME_USERNAME'
-app.config['BASIC_AUTH_PASSWORD'] = 'CHANGE_ME_PLEASE'
+app.config['BASIC_AUTH_USERNAME'] = 'pi'
+app.config['BASIC_AUTH_PASSWORD'] = 'alexandriner'
 app.config['BASIC_AUTH_FORCE'] = True
 
 basic_auth = BasicAuth(app)
@@ -24,14 +26,14 @@ def check_for_objects():
 	global last_epoch
 	while True:
 		try:
-			frame, found_obj = video_camera.get_object(object_classifier)
+			frame, found_obj = video_camera.get_object(object_classifier, draw=draw_frame, rgb=rgb)
 			if found_obj and (time.time() - last_epoch) > email_update_interval:
 				last_epoch = time.time()
-				print "Sending email..."
+				print("Sending email...")
 				sendEmail(frame)
-				print "done!"
+				print("done!")
 		except:
-			print "Error sending email: ", sys.exc_info()[0]
+			print("Error sending email: % " % sys.exc_info()[0])
 
 @app.route('/')
 @basic_auth.required

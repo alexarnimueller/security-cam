@@ -23,8 +23,9 @@ class VideoCamera(object):
         ret, jpeg = cv2.imencode('.jpg', frame)
         return jpeg.tobytes()
 
-    def get_object(self, classifier):
+    def get_object(self, classifier, draw=True, rgb=None):
         found_objects = False
+        if not rgb: rgb = (0, 255, 0)
         frame = self.flip_if_needed(self.vs.read()).copy() 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
@@ -40,8 +41,9 @@ class VideoCamera(object):
             found_objects = True
 
         # Draw a rectangle around the objects
-        for (x, y, w, h) in objects:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        if draw:
+            for (x, y, w, h) in objects:
+                cv2.rectangle(frame, (x, y), (x + w, y + h), rgb, 2)
 
         ret, jpeg = cv2.imencode('.jpg', frame)
         return (jpeg.tobytes(), found_objects)
